@@ -21,6 +21,7 @@ app.post("/create", async (request, response) => {
       "INSERT INTO addtodo (description) VALUES($1) RETURNING *", // return * is returning all the data//don't need to always have *, you can specify specific column you want like "description"
       [description] // value of the $1 creates dynamically
     );
+   
     console.log(request.body);
     response.json(newTodo.rows[0]); // returns one row
   } catch (err) {
@@ -88,6 +89,54 @@ app.delete("/create/:id", async (request, response) => {
     console.log(err.message);
   }
 });
+
+// registering user
+app.post("/register", async (request, response) => {
+  try{
+    const username = request.body.username;
+    const password = request.body.passwordname;
+    const add = await pool.query("INSERT INTO users (username, passwordname) VALUES ($1,$2) RETURNING *",[username,password]);
+    
+    response.send(add.rows[0])
+  }catch(err){
+    console.error(err.message);
+  }
+})
+
+//getting user
+app.get("/users", async (request, response) => {
+  try{
+    const user = await pool.query("SELECT * FROM users");
+    response.json(user.rows)
+  }catch(err){
+    console.error(err.message);
+  }
+})
+//login user
+app.post("/login/:username", async (request, response) => {
+  try{
+    const username = request.body.username;
+    const password = request.body.passwordname;
+    const login = pool.query("SELECT * FROM users WHERE username=? AND passwordname=? VALUES ($1,$2)", [username, password],
+     (result) => {
+        if (result) {
+          
+          return response.send(result); // always needs a return when doing if statements
+        }
+        else {
+         return response.send({ message: "Wrong login information" });
+          
+        }
+        // response.json(`user ${username} logged in`)
+      });
+   
+
+
+
+  }catch(err){
+    console.error(err.message);
+  }
+})
 
 app.listen(5000, () => {
   //setting port to listen on frontend
